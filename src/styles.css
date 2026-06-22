@@ -53,6 +53,11 @@ button.secondary {
   color: #e7edf6;
 }
 
+button.active {
+  background: var(--accent);
+  color: #061018;
+}
+
 .appShell {
   display: grid;
   grid-template-rows: auto 1fr;
@@ -87,16 +92,105 @@ button.secondary {
   gap: 0.65rem;
 }
 
-.workspace {
+.mainLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  grid-template-columns: 260px minmax(0, 1fr);
   gap: 1rem;
   min-height: 0;
 }
 
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 1rem;
+  min-height: 0;
+}
+
+.levelSidebar,
 .editorPane,
 .outputPane {
   min-height: 0;
+}
+
+.levelSidebar {
+  background: #111821;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.sidebarHeader {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.85rem;
+}
+
+.sidebarHeader h2 {
+  font-size: 1rem;
+  margin: 0.18rem 0 0;
+}
+
+.levelList {
+  align-content: start;
+  display: grid;
+  gap: 0.55rem;
+  overflow: auto;
+  padding-top: 0.85rem;
+}
+
+.levelItem {
+  align-items: start;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #d6e1ed;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: auto 1fr;
+  padding: 0.72rem;
+  text-align: left;
+}
+
+.levelItem:hover:not(:disabled) {
+  background: #182230;
+}
+
+.levelItem.active {
+  background: #1b2d3a;
+  border-color: rgba(104, 225, 253, 0.55);
+  color: #f4fbff;
+}
+
+.levelNumber {
+  align-items: center;
+  background: var(--panel-strong);
+  border-radius: 6px;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 850;
+  height: 1.65rem;
+  justify-content: center;
+  width: 1.65rem;
+}
+
+.levelItem.active .levelNumber {
+  background: var(--accent);
+  color: #061018;
+}
+
+.levelItem strong,
+.levelItem small {
+  display: block;
+}
+
+.levelItem small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 520;
+  line-height: 1.35;
+  margin-top: 0.22rem;
 }
 
 .editorPane {
@@ -107,11 +201,12 @@ button.secondary {
 
 .outputPane {
   display: grid;
-  grid-template-rows: auto minmax(0, 0.8fr) minmax(0, 1fr);
+  grid-template-rows: minmax(280px, 1.1fr) auto minmax(0, 0.7fr) minmax(0, 0.8fr);
   gap: 1rem;
 }
 
 .status,
+.worldPanel,
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -161,6 +256,26 @@ button.secondary {
   min-height: 0;
   overflow: auto;
   padding: 1rem;
+}
+
+.worldPanel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.worldCanvas {
+  border-radius: 7px;
+  min-height: 220px;
+  overflow: hidden;
+}
+
+.worldCanvas canvas {
+  display: block;
+  height: 100%;
+  width: 100%;
 }
 
 .panelHeader {
@@ -218,6 +333,7 @@ button.secondary {
   }
 
   .topBar,
+  .mainLayout,
   .workspace {
     grid-template-columns: 1fr;
   }
@@ -232,8 +348,23 @@ button.secondary {
     grid-template-columns: 1fr 1fr;
   }
 
-  .workspace {
-    display: grid;
+  .levelSidebar {
+    padding: 0.75rem;
+  }
+
+  .sidebarHeader {
+    display: none;
+  }
+
+  .levelList {
+    display: flex;
+    gap: 0.55rem;
+    overflow-x: auto;
+    padding-top: 0;
+  }
+
+  .levelItem {
+    min-width: 220px;
   }
 
   .editorPane {
@@ -241,6 +372,6 @@ button.secondary {
   }
 
   .outputPane {
-    grid-template-rows: auto auto auto;
+    grid-template-rows: 360px auto auto auto;
   }
 }

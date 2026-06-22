@@ -1,22 +1,21 @@
-import type { RunResult, TraceEntry } from "./types";
+import type { Level, RunResult, TraceEntry } from "./types";
 
 type RunRequest = {
   code: string;
+  level: Level;
 };
 
 const maxSteps = 40;
 
 self.onmessage = (event: MessageEvent<RunRequest>) => {
-  const result = runUserCode(event.data.code);
+  const result = runUserCode(event.data.code, event.data.level);
   self.postMessage(result);
 };
 
-function runUserCode(code: string): RunResult {
+function runUserCode(code: string, level: Level): RunResult {
   const trace: TraceEntry[] = [];
   const state = {
-    x: 0,
-    y: 0,
-    coins: 0,
+    ...level.start,
   };
 
   const addTrace = (action: string, note: string) => {
@@ -33,27 +32,39 @@ function runUserCode(code: string): RunResult {
   };
 
   const moveRight = () => {
+    if (state.x + 1 >= level.width) {
+      throw new Error("moveRight() would leave the field.");
+    }
+
     state.x += 1;
-    state.y = 0;
     addTrace("moveRight()", `Moved to x=${state.x}.`);
   };
 
-  const jump = () => {
-    if (state.y > 0) {
-      throw new Error("You are already in the air.");
+  const moveLeft = () => {
+    if (state.x - 1 < 0) {
+      throw new Error("moveLeft() would leave the field.");
     }
 
-    state.y = 1;
-    addTrace("jump()", "Jumped over the tile.");
+    state.x -= 1;
+    addTrace("moveLeft()", `Moved to x=${state.x}.`);
   };
 
-  const collectCoin = () => {
-    if (state.x !== 2 || state.y !== 1) {
-      throw new Error("The coin can only be collected at x=2 while jumping.");
+  const moveUp = () => {
+    if (state.y + 1 >= level.height) {
+      throw new Error("moveUp() would leave the field.");
     }
 
-    state.coins += 1;
-    addTrace("collectCoin()", "Collected the coin.");
+    state.y += 1;
+    addTrace("moveUp()", `Moved to y=${state.y}.`);
+  };
+
+  const moveDown = () => {
+    if (state.y - 1 < 0) {
+      throw new Error("moveDown() would leave the field.");
+    }
+
+    state.y -= 1;
+    addTrace("moveDown()", `Moved to y=${state.y}.`);
   };
 
   const log = (message: string) => {
@@ -63,8 +74,9 @@ function runUserCode(code: string): RunResult {
   try {
     const userProgram = new Function(
       "moveRight",
-      "jump",
-      "collectCoin",
+      "moveLeft",
+      "moveUp",
+      "moveDown",
       "log",
       `${code}
 
@@ -75,19 +87,19 @@ if (typeof solve !== "function") {
 solve();`,
     );
 
-    userProgram(moveRight, jump, collectCoin, log);
+    userProgram(moveRight, moveLeft, moveUp, moveDown, log);
 
-    if (state.x === 2 && state.y === 1 && state.coins === 1) {
+    if (state.x === level.goal.x && state.y === level.goal.y) {
       return {
         status: "passed",
-        message: "Level passed. The coin is yours.",
+        message: `${level.name} passed. The crop marker is reached.`,
         trace,
       };
     }
 
     return {
       status: "failed",
-      message: `Not quite. Ended at x=${state.x}, y=${state.y}, coins=${state.coins}.`,
+      message: `Not quite. Ended at x=${state.x}, y=${state.y}; goal is x=${level.goal.x}, y=${level.goal.y}.`,
       trace,
     };
   } catch (error) {

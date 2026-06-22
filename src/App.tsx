@@ -1,8 +1,9 @@
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import { type MutableRefObject, useRef, useState } from "react";
 import type { editor, Uri } from "monaco-editor";
-import { gameApiTypes, levelBrief, starterCode } from "./level";
-import type { Diagnostic, RunResult } from "./types";
+import { gameApiTypes, levels } from "./level";
+import type { Diagnostic, Level, RunResult } from "./types";
+import WorldView from "./WorldView";
 
 const modelPath = "file:///solution.ts";
 const runTimeoutMs = 1000;
@@ -14,10 +15,11 @@ const idleResult: RunResult = {
 };
 
 export default function App() {
+  const [activeLevel, setActiveLevel] = useState(levels[0]);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  const [code, setCode] = useState(starterCode);
+  const [code, setCode] = useState(activeLevel.starterCode);
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [runResult, setRunResult] = useState<RunResult>(idleResult);
   const [isRunning, setIsRunning] = useState(false);
@@ -49,10 +51,18 @@ export default function App() {
   };
 
   const reset = () => {
-    setCode(starterCode);
+    setCode(activeLevel.starterCode);
     setDiagnostics([]);
     setRunResult(idleResult);
-    editorRef.current?.setValue(starterCode);
+    editorRef.current?.setValue(activeLevel.starterCode);
+  };
+
+  const selectLevel = (level: Level) => {
+    setActiveLevel(level);
+    setCode(level.starterCode);
+    setDiagnostics([]);
+    setRunResult(idleResult);
+    editorRef.current?.setValue(level.starterCode);
   };
 
   const run = async () => {
@@ -87,7 +97,7 @@ export default function App() {
       }
 
       const js = await emitJavaScript(monaco, model.uri);
-      const result = await runInWorker(js, workerRef);
+      const result = await runInWorker(js, activeLevel, workerRef);
       setRunResult(result);
     } catch (error) {
       setRunResult({
@@ -108,7 +118,7 @@ export default function App() {
       <header className="topBar">
         <div>
           <h1>TypeScript Minigame Lab</h1>
-          <p>{levelBrief.objective}</p>
+          <p>{activeLevel.objective}</p>
         </div>
         <div className="actions">
           <button type="button" onClick={run} disabled={isRunning}>
@@ -120,29 +130,67 @@ export default function App() {
         </div>
       </header>
 
-      <section className="workspace">
-        <div className="editorPane" aria-label="TypeScript editor">
-          <Editor
-            height="100%"
-            defaultLanguage="typescript"
-            path={modelPath}
-            theme="vs-dark"
-            value={code}
-            onChange={(value) => setCode(value ?? "")}
-            onMount={handleEditorMount}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 15,
-              fontLigatures: true,
-              scrollBeyondLastLine: false,
-              tabSize: 2,
-              wordWrap: "on",
-              padding: { top: 16, bottom: 16 },
-            }}
-          />
+      <section className="mainLayout">
+        <aside className="levelSidebar">
+          <div className="sidebarHeader">
+            <span className="eyebrow">Levels</span>
+            <h2>Farm Tasks</h2>
+          </div>
+
+          <nav className="levelList" aria-label="Levels">
+            {levels.map((level, index) => (
+              <button
+                key={level.id}
+                type="button"
+                className={level.id === activeLevel.id ? "levelItem active" : "levelItem"}
+                onClick={() => selectLevel(level)}
+              >
+                <span className="levelNumber">{index + 1}</span>
+                <span>
+                  <strong>{level.name.replace(/^Level \d+: /, "")}</strong>
+                  <small>{level.objective}</small>
+                </span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <div className="workspace">
+          <div className="editorPane" aria-label="TypeScript editor">
+            <Editor
+              height="100%"
+              defaultLanguage="typescript"
+              path={modelPath}
+              theme="vs-dark"
+              value={code}
+              onChange={(value) => setCode(value ?? "")}
+              onMount={handleEditorMount}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 15,
+                fontLigatures: true,
+                scrollBeyondLastLine: false,
+                tabSize: 2,
+                wordWrap: "on",
+                padding: { top: 16, bottom: 16 },
+              }}
+            />
         </div>
 
         <aside className="outputPane">
+          <section className="worldPanel">
+            <div className="panelHeader">
+              <div>
+                <span className="eyebrow">Tiny world</span>
+                <h3>{activeLevel.name}</h3>
+              </div>
+              <span>
+                {activeLevel.goal.x},{activeLevel.goal.y}
+              </span>
+            </div>
+            <WorldView level={activeLevel} runResult={runResult} />
+          </section>
+
           <section className={`status ${runResult.status}`}>
             <div>
               <span className="eyebrow">Level feedback</span>
@@ -179,7 +227,7 @@ export default function App() {
               <span>{runResult.trace.length}</span>
             </div>
             {runResult.trace.length === 0 ? (
-              <p className="muted">{levelBrief.hint}</p>
+              <p className="muted">{activeLevel.hint}</p>
             ) : (
               <ol className="traceList">
                 {runResult.trace.map((entry) => (
@@ -187,8 +235,7 @@ export default function App() {
                     <code>{entry.action}</code>
                     <span>{entry.note}</span>
                     <small>
-                      x={entry.state.x}, y={entry.state.y}, coins=
-                      {entry.state.coins}
+                      x={entry.state.x}, y={entry.state.y}
                     </small>
                   </li>
                 ))}
@@ -196,6 +243,7 @@ export default function App() {
             )}
           </section>
         </aside>
+        </div>
       </section>
     </main>
   );
@@ -249,6 +297,7 @@ async function emitJavaScript(monaco: Monaco, uri: Uri): Promise<string> {
 
 function runInWorker(
   code: string,
+  level: Level,
   workerRef: MutableRefObject<Worker | null>,
 ): Promise<RunResult> {
   return new Promise((resolve) => {
@@ -286,7 +335,7 @@ function runInWorker(
       });
     };
 
-    worker.postMessage({ code });
+    worker.postMessage({ code, level });
   });
 }
 

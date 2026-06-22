@@ -1,19 +1,42 @@
-export const starterCode = `function solve() {
-  moveRight();
-  moveRight();
-  jump();
-  collectCoin();
-}
-`;
+import type { Level } from "./types";
 
 export const gameApiTypes = `declare function moveRight(): void;
-declare function jump(): void;
-declare function collectCoin(): void;
+declare function moveLeft(): void;
+declare function moveUp(): void;
+declare function moveDown(): void;
 declare function log(message: string): void;
 `;
 
-export const levelBrief = {
-  objective: "Move to x=2, jump, and collect the coin.",
-  success: "Coin collected at x=2 while jumping.",
-  hint: "Try calling moveRight(), moveRight(), jump(), then collectCoin().",
-};
+export const levels: Level[] = [
+  {
+    id: "furrow-east",
+    name: "Level 1: Furrow East",
+    objective: "Move the farmer two tiles to the crop marker.",
+    hint: "Call moveRight() twice.",
+    starterCode: `function solve() {
+  moveRight();
+  moveRight();
+}
+`,
+    width: 4,
+    height: 3,
+    start: { x: 0, y: 1 },
+    goal: { x: 2, y: 1 },
+  },
+  {
+    id: "north-plot",
+    name: "Level 2: North Plot",
+    objective: "Move up two tiles, then right once to reach the marker.",
+    hint: "Try moveUp(), moveUp(), then moveRight().",
+    starterCode: `function solve() {
+  moveUp();
+  moveUp();
+  moveRight();
+}
+`,
+    width: 4,
+    height: 4,
+    start: { x: 1, y: 0 },
+    goal: { x: 2, y: 2 },
+  },
+];
