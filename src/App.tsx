@@ -126,16 +126,6 @@ export default function App() {
     <main className="appShell">
       <section className="mainLayout">
         <aside className="levelSidebar">
-          <div className="levelActions">
-            <InfoTip label="Level objective">{activeLevel.objective}</InfoTip>
-            <Button className="react-aria-Button appButton" onPress={run} isDisabled={isRunning}>
-              {isRunning ? "Running..." : "Run"}
-            </Button>
-            <Button className="react-aria-Button appButton secondary" onPress={reset}>
-              Reset
-            </Button>
-          </div>
-
           <ListBox
             className="react-aria-ListBox levelList"
             aria-label="Levels"
@@ -195,18 +185,28 @@ export default function App() {
         </div>
 
         <aside className="outputPane">
-          <section className="worldPanel">
-            <div className="panelHeader compact">
-              <InfoTip label="World goal">
-                Goal tile: x={activeLevel.goal.x}, y={activeLevel.goal.y}
-              </InfoTip>
+          <section className={`worldPanel ${runResult.status}`}>
+            <div className="runPanelHeader">
+              <div className="runPanelTools">
+                <InfoTip label="Level objective">{activeLevel.objective}</InfoTip>
+                <InfoTip label="World goal">
+                  Goal tile: x={activeLevel.goal.x}, y={activeLevel.goal.y}
+                </InfoTip>
+              </div>
+              <div className="runPanelActions">
+                <Button className="react-aria-Button appButton" onPress={run} isDisabled={isRunning}>
+                  {isRunning ? "Running..." : "Run"}
+                </Button>
+                <Button className="react-aria-Button appButton secondary" onPress={reset}>
+                  Reset
+                </Button>
+              </div>
             </div>
             <WorldView level={activeLevel} runResult={runResult} />
-          </section>
-
-          <section className={`status ${runResult.status}`}>
-            <h2>{statusTitle(runResult.status)}</h2>
-            <p>{runResult.message}</p>
+            <div className="runStatus">
+              <h2>{statusTitle(runResult.status)}</h2>
+              <p>{runResult.message}</p>
+            </div>
           </section>
 
           <section className="panel">

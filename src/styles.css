@@ -112,17 +112,8 @@ body {
   background: var(--overlay-background);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 0.75rem;
   overflow: hidden;
   padding: 1rem;
-}
-
-.levelActions {
-  display: grid;
-  gap: 0.5rem;
-  grid-template-columns: auto 1fr 1fr;
 }
 
 .levelList {
@@ -206,11 +197,10 @@ body {
 
 .outputPane {
   display: grid;
-  grid-template-rows: minmax(280px, 1.1fr) auto minmax(0, 0.7fr) minmax(0, 0.8fr);
+  grid-template-rows: minmax(360px, 1.35fr) minmax(0, 0.7fr) minmax(0, 0.8fr);
   gap: 1rem;
 }
 
-.status,
 .worldPanel,
 .panel {
   background: var(--panel-background);
@@ -218,22 +208,16 @@ body {
   border-radius: var(--radius);
 }
 
-.status {
-  display: grid;
-  gap: 0.65rem;
-  padding: 1rem;
-}
-
-.status.passed {
+.worldPanel.passed {
   border-color: var(--success-color);
 }
 
-.status.failed,
-.status.error {
+.worldPanel.failed,
+.worldPanel.error {
   border-color: var(--danger-color);
 }
 
-.status.running {
+.worldPanel.running {
   border-color: var(--highlight-background);
 }
 
@@ -246,12 +230,10 @@ body {
   text-transform: uppercase;
 }
 
-.status h2,
 .panel h3 {
   margin: 0;
 }
 
-.status p,
 .muted {
   color: var(--text-color-muted);
   margin: 0;
@@ -265,10 +247,45 @@ body {
 
 .worldPanel {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
   min-height: 0;
   overflow: hidden;
   padding: 1rem;
+}
+
+.runPanelHeader {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.runPanelTools,
+.runPanelActions {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.runPanelActions {
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.runStatus {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.runStatus h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.runStatus p {
+  color: var(--text-color-muted);
+  margin: 0;
 }
 
 .worldCanvas {
@@ -421,10 +438,6 @@ body {
     padding: 0.75rem;
   }
 
-  .levelActions {
-    grid-template-columns: auto 1fr 1fr;
-  }
-
   .levelList {
     display: flex;
     gap: 0.55rem;
@@ -441,6 +454,16 @@ body {
   }
 
   .outputPane {
-    grid-template-rows: 360px auto auto auto;
+    grid-template-rows: 430px auto auto;
+  }
+
+  .runPanelHeader {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .runPanelActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }
