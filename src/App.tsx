@@ -1,5 +1,6 @@
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import { type MutableRefObject, useRef, useState } from "react";
+import { Button, ListBox, ListBoxItem } from "react-aria-components";
 import type { editor, Uri } from "monaco-editor";
 import { gameApiTypes, levels } from "./level";
 import type { Diagnostic, Level, RunResult } from "./types";
@@ -121,12 +122,12 @@ export default function App() {
           <p>{activeLevel.objective}</p>
         </div>
         <div className="actions">
-          <button type="button" onClick={run} disabled={isRunning}>
+          <Button className="appButton" onPress={run} isDisabled={isRunning}>
             {isRunning ? "Running..." : "Run"}
-          </button>
-          <button type="button" className="secondary" onClick={reset}>
+          </Button>
+          <Button className="appButton secondary" onPress={reset}>
             Reset
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -137,22 +138,41 @@ export default function App() {
             <h2>Farm Tasks</h2>
           </div>
 
-          <nav className="levelList" aria-label="Levels">
+          <ListBox
+            className="levelList"
+            aria-label="Levels"
+            selectionMode="single"
+            disallowEmptySelection
+            selectedKeys={[activeLevel.id]}
+            onSelectionChange={(keys) => {
+              if (keys === "all") {
+                return;
+              }
+
+              const nextId = String([...keys][0]);
+              const nextLevel = levels.find((level) => level.id === nextId);
+
+              if (nextLevel) {
+                selectLevel(nextLevel);
+              }
+            }}
+          >
             {levels.map((level, index) => (
-              <button
+              <ListBoxItem
                 key={level.id}
-                type="button"
-                className={level.id === activeLevel.id ? "levelItem active" : "levelItem"}
-                onClick={() => selectLevel(level)}
+                id={level.id}
+                textValue={level.name}
+                aria-label={`${level.name}: ${level.objective}`}
+                className="levelItem"
               >
                 <span className="levelNumber">{index + 1}</span>
                 <span>
                   <strong>{level.name.replace(/^Level \d+: /, "")}</strong>
                   <small>{level.objective}</small>
                 </span>
-              </button>
+              </ListBoxItem>
             ))}
-          </nav>
+          </ListBox>
         </aside>
 
         <div className="workspace">

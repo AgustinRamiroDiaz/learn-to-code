@@ -8,6 +8,7 @@ The main objective is to make programming feel tangible and fun without hiding t
 
 - Monaco Editor for writing TypeScript.
 - Monaco's built-in TypeScript worker for browser-side diagnostics and JavaScript emit.
+- React Aria Components for accessible buttons and level navigation.
 - Sandboxed Web Worker execution for user code.
 - Level navigation sidebar.
 - Three.js world view that replays movement traces.
@@ -19,6 +20,7 @@ The main objective is to make programming feel tangible and fun without hiding t
 - Vite
 - React
 - TypeScript
+- React Aria Components
 - Monaco Editor
 - Three.js
 - Web Workers
@@ -77,4 +79,3 @@ To deploy:
 4. Set **Build and deployment** source to **GitHub Actions**.
 
 The workflow installs dependencies with pnpm, builds the Vite app, uploads `dist`, and deploys it to GitHub Pages.
-

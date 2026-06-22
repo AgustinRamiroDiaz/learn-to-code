@@ -24,7 +24,7 @@ body {
   min-height: 100vh;
 }
 
-button {
+.appButton {
   border: 0;
   border-radius: 7px;
   background: var(--accent);
@@ -39,23 +39,25 @@ button {
     background 150ms ease;
 }
 
-button:hover:not(:disabled) {
+.appButton[data-hovered]:not([data-disabled]) {
   transform: translateY(-1px);
 }
 
-button:disabled {
+.appButton[data-disabled] {
   cursor: wait;
   opacity: 0.68;
 }
 
-button.secondary {
+.appButton.secondary {
   background: #263244;
   color: #e7edf6;
 }
 
-button.active {
-  background: var(--accent);
-  color: #061018;
+.appButton[data-focus-visible],
+.levelList[data-focus-visible],
+.levelItem[data-focus-visible] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .appShell {
@@ -136,6 +138,7 @@ button.active {
   align-content: start;
   display: grid;
   gap: 0.55rem;
+  outline: none;
   overflow: auto;
   padding-top: 0.85rem;
 }
@@ -144,19 +147,31 @@ button.active {
   align-items: start;
   background: transparent;
   border: 1px solid transparent;
+  border-radius: 7px;
   color: #d6e1ed;
+  cursor: pointer;
   display: grid;
   gap: 0.65rem;
   grid-template-columns: auto 1fr;
+  outline: none;
   padding: 0.72rem;
   text-align: left;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
 }
 
-.levelItem:hover:not(:disabled) {
+.levelItem[data-hovered] {
   background: #182230;
 }
 
-.levelItem.active {
+.levelItem[data-pressed] {
+  transform: translateY(1px);
+}
+
+.levelItem[data-selected] {
   background: #1b2d3a;
   border-color: rgba(104, 225, 253, 0.55);
   color: #f4fbff;
@@ -175,7 +190,7 @@ button.active {
   width: 1.65rem;
 }
 
-.levelItem.active .levelNumber {
+.levelItem[data-selected] .levelNumber {
   background: var(--accent);
   color: #061018;
 }
