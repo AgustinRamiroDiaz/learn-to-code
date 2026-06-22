@@ -38,6 +38,12 @@ export default function App() {
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [runResult, setRunResult] = useState<RunResult>(idleResult);
   const [isRunning, setIsRunning] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [collapsedPanels, setCollapsedPanels] = useState({
+    world: false,
+    diagnostics: false,
+    trace: false,
+  });
 
   useEffect(() => {
     document.documentElement.lang = localeTags[locale];
@@ -148,11 +154,39 @@ export default function App() {
     }
   };
 
+  const togglePanel = (panel: keyof typeof collapsedPanels) => {
+    setCollapsedPanels((current) => ({
+      ...current,
+      [panel]: !current[panel],
+    }));
+  };
+
   return (
     <I18nProvider locale={localeTags[locale]}>
       <main className="appShell">
-        <section className="mainLayout">
-          <aside className="levelSidebar">
+        <section
+          className={
+            isSidebarCollapsed
+              ? "mainLayout sidebarCollapsed"
+              : "mainLayout"
+          }
+        >
+          <aside
+            className={
+              isSidebarCollapsed
+                ? "levelSidebar collapsed"
+                : "levelSidebar"
+            }
+          >
+            <Button
+              className="react-aria-Button collapseButton sidebarToggle"
+              aria-label={`${isSidebarCollapsed ? t.expand : t.collapse} ${t.sidebar}`}
+              aria-expanded={!isSidebarCollapsed}
+              onPress={() => setIsSidebarCollapsed((value) => !value)}
+            >
+              {isSidebarCollapsed ? ">" : "<"}
+            </Button>
+
             <div className="localeSwitch" aria-label={t.language}>
               {locales.map((item) => (
                 <Button
@@ -198,7 +232,7 @@ export default function App() {
                   className="react-aria-ListBoxItem levelItem"
                 >
                   <span className="levelNumber">{index + 1}</span>
-                  <span>
+                  <span className="levelName">
                     <strong>{levelTitle(level.name)}</strong>
                   </span>
                 </ListBoxItem>
@@ -229,9 +263,23 @@ export default function App() {
         </div>
 
         <aside className="outputPane">
-          <section className={`worldPanel ${runResult.status}`}>
+          <section
+            className={
+              collapsedPanels.world
+                ? `worldPanel ${runResult.status} collapsed`
+                : `worldPanel ${runResult.status}`
+            }
+          >
             <div className="runPanelHeader">
               <div className="runPanelTools">
+                <Button
+                  className="react-aria-Button collapseButton"
+                  aria-label={`${collapsedPanels.world ? t.expand : t.collapse} ${t.worldGoal}`}
+                  aria-expanded={!collapsedPanels.world}
+                  onPress={() => togglePanel("world")}
+                >
+                  {collapsedPanels.world ? "+" : "-"}
+                </Button>
                 <InfoTip label={t.levelObjective}>{activeLevel.objective}</InfoTip>
                 <InfoTip label={t.worldGoal}>
                   {goalSummary(activeLevel, t)}
@@ -246,57 +294,87 @@ export default function App() {
                 </Button>
               </div>
             </div>
-            <WorldView level={activeLevel} runResult={runResult} />
-            <div className="runStatus">
-              <h2>{t.status[runResult.status]}</h2>
-              <p>{runResult.message}</p>
+            <div className="worldPanelBody">
+              <WorldView level={activeLevel} runResult={runResult} />
+              <div className="runStatus">
+                <h2>{t.status[runResult.status]}</h2>
+                <p>{runResult.message}</p>
+              </div>
             </div>
           </section>
 
-          <section className="panel">
+          <section
+            className={
+              collapsedPanels.diagnostics ? "panel collapsed" : "panel"
+            }
+          >
             <div className="panelHeader">
-              <h3>{t.diagnostics}</h3>
+              <div className="panelTitleRow">
+                <Button
+                  className="react-aria-Button collapseButton"
+                  aria-label={`${collapsedPanels.diagnostics ? t.expand : t.collapse} ${t.diagnostics}`}
+                  aria-expanded={!collapsedPanels.diagnostics}
+                  onPress={() => togglePanel("diagnostics")}
+                >
+                  {collapsedPanels.diagnostics ? "+" : "-"}
+                </Button>
+                <h3>{t.diagnostics}</h3>
+              </div>
               <span>{diagnostics.length}</span>
             </div>
-            {diagnostics.length === 0 ? (
-              <p className="muted">{t.clean}</p>
-            ) : (
-              <ul className="diagnosticList">
-                {diagnostics.map((diagnostic, index) => (
-                  <li key={`${diagnostic.line}-${diagnostic.column}-${index}`}>
-                    <strong>{t.severity[diagnostic.severity]}</strong>
-                    <span>
-                      {t.diagnosticsLine} {diagnostic.line}, {t.diagnosticsColumn}{" "}
-                      {diagnostic.column}:{" "}
-                      {diagnostic.message}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="panelBody">
+              {diagnostics.length === 0 ? (
+                <p className="muted">{t.clean}</p>
+              ) : (
+                <ul className="diagnosticList">
+                  {diagnostics.map((diagnostic, index) => (
+                    <li key={`${diagnostic.line}-${diagnostic.column}-${index}`}>
+                      <strong>{t.severity[diagnostic.severity]}</strong>
+                      <span>
+                        {t.diagnosticsLine} {diagnostic.line}, {t.diagnosticsColumn}{" "}
+                        {diagnostic.column}:{" "}
+                        {diagnostic.message}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
 
-          <section className="panel">
+          <section className={collapsedPanels.trace ? "panel collapsed" : "panel"}>
             <div className="panelHeader">
-              <h3>{t.trace}</h3>
+              <div className="panelTitleRow">
+                <Button
+                  className="react-aria-Button collapseButton"
+                  aria-label={`${collapsedPanels.trace ? t.expand : t.collapse} ${t.trace}`}
+                  aria-expanded={!collapsedPanels.trace}
+                  onPress={() => togglePanel("trace")}
+                >
+                  {collapsedPanels.trace ? "+" : "-"}
+                </Button>
+                <h3>{t.trace}</h3>
+              </div>
               <div className="panelTools">
                 <InfoTip label={t.traceHint}>{activeLevel.hint}</InfoTip>
                 <span>{runResult.trace.length}</span>
               </div>
             </div>
-            {runResult.trace.length === 0 ? (
-              <p className="muted">{t.noSteps}</p>
-            ) : (
-              <ol className="traceList">
-                {runResult.trace.map((entry) => (
-                  <li key={entry.step}>
-                    <code>{entry.action}</code>
-                    <span>{entry.note}</span>
-                    <small>{traceState(entry.state, t)}</small>
-                  </li>
-                ))}
-              </ol>
-            )}
+            <div className="panelBody">
+              {runResult.trace.length === 0 ? (
+                <p className="muted">{t.noSteps}</p>
+              ) : (
+                <ol className="traceList">
+                  {runResult.trace.map((entry) => (
+                    <li key={entry.step}>
+                      <code>{entry.action}</code>
+                      <span>{entry.note}</span>
+                      <small>{traceState(entry.state, t)}</small>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
           </section>
         </aside>
         </div>

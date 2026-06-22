@@ -5,6 +5,12 @@
   background: var(--background-color);
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -13,6 +19,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 .appButton {
@@ -75,6 +82,7 @@ body {
 
 .appButton[data-focus-visible],
 .iconButton[data-focus-visible],
+.collapseButton[data-focus-visible],
 .localeButton[data-focus-visible],
 .levelList[data-focus-visible],
 .levelItem[data-focus-visible] {
@@ -85,7 +93,9 @@ body {
 .appShell {
   display: grid;
   grid-template-rows: 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
   padding: 1.25rem;
 }
 
@@ -93,14 +103,22 @@ body {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   gap: 1rem;
+  height: 100%;
   min-height: 0;
+  transition: grid-template-columns 180ms ease;
+}
+
+.mainLayout.sidebarCollapsed {
+  grid-template-columns: 72px minmax(0, 1fr);
 }
 
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
   gap: 1rem;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .levelSidebar,
@@ -115,9 +133,16 @@ body {
   border-radius: var(--radius);
   display: grid;
   gap: 0.75rem;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto minmax(0, 1fr);
   overflow: hidden;
   padding: 1rem;
+  transition:
+    padding 180ms ease,
+    width 180ms ease;
+}
+
+.levelSidebar.collapsed {
+  padding: 0.7rem;
 }
 
 .localeSwitch {
@@ -143,6 +168,46 @@ body {
 .localeButton.active {
   background: var(--highlight-overlay);
   color: var(--text-color);
+}
+
+.collapseButton {
+  align-items: center;
+  background: var(--field-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-color-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 850;
+  height: 1.75rem;
+  justify-content: center;
+  line-height: 1;
+  min-width: 1.75rem;
+  padding: 0;
+}
+
+.collapseButton[data-hovered],
+.collapseButton[data-pressed] {
+  background: var(--highlight-overlay);
+  color: var(--text-color);
+}
+
+.sidebarToggle {
+  justify-self: end;
+}
+
+.levelSidebar.collapsed .sidebarToggle {
+  justify-self: center;
+}
+
+.levelSidebar.collapsed .localeSwitch {
+  grid-template-columns: 1fr;
+}
+
+.levelSidebar.collapsed .localeButton {
+  padding-inline: 0;
 }
 
 .levelList {
@@ -171,6 +236,13 @@ body {
     border-color 150ms ease,
     color 150ms ease,
     transform 150ms ease;
+}
+
+.levelSidebar.collapsed .levelItem {
+  gap: 0;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding: 0.45rem;
 }
 
 .levelItem[data-hovered] {
@@ -210,6 +282,10 @@ body {
   display: block;
 }
 
+.levelSidebar.collapsed .levelName {
+  display: none;
+}
+
 .levelItem small {
   color: var(--text-color-muted);
   font-size: 0.78rem;
@@ -221,13 +297,16 @@ body {
 .editorPane {
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
+  min-height: 0;
   overflow: hidden;
 }
 
 .outputPane {
-  display: grid;
-  grid-template-rows: minmax(360px, 1.35fr) minmax(0, 0.7fr) minmax(0, 0.8fr);
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .worldPanel,
@@ -269,18 +348,40 @@ body {
 }
 
 .panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  flex: 0.8 1 0;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   padding: 1rem;
 }
 
 .worldPanel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  flex: 1.35 1 0;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.75rem;
   min-height: 0;
   overflow: hidden;
   padding: 1rem;
+}
+
+.worldPanel.collapsed,
+.panel.collapsed {
+  flex: 0 0 auto;
+}
+
+.worldPanelBody {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.worldPanel.collapsed .worldPanelBody,
+.panel.collapsed .panelBody {
+  display: none;
 }
 
 .runPanelHeader {
@@ -337,6 +438,18 @@ body {
   margin-bottom: 0.75rem;
 }
 
+.worldPanel .runPanelHeader,
+.panel.collapsed .panelHeader {
+  margin-bottom: 0;
+}
+
+.panelTitleRow {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 .panelHeader.compact {
   justify-content: flex-end;
   margin-bottom: 0.5rem;
@@ -360,6 +473,12 @@ body {
   align-items: center;
   display: flex;
   gap: 0.45rem;
+}
+
+.panelBody {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 0.15rem;
 }
 
 .appTooltip {
