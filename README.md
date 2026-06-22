@@ -11,6 +11,7 @@ The main objective is to make programming feel tangible and fun without hiding t
 - React Aria Components for accessible buttons and level navigation.
 - Sandboxed Web Worker execution for user code.
 - Level navigation sidebar.
+- English and Spanish UI.
 - Three.js world view that replays movement traces.
 - No backend and no server-side compilation.
 

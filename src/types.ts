@@ -9,8 +9,12 @@ export type TraceEntry = {
   step: number;
   action: string;
   state: {
-    x: number;
-    y: number;
+    x?: number;
+    y?: number;
+    items?: string[];
+    processed?: string[];
+    current?: string;
+    visited?: string[];
   };
   note: string;
 };
@@ -21,12 +25,16 @@ export type RunResult = {
   trace: TraceEntry[];
 };
 
-export type Level = {
+type BaseLevel = {
   id: string;
   name: string;
   objective: string;
   hint: string;
   starterCode: string;
+};
+
+export type GridLevel = BaseLevel & {
+  kind: "grid";
   width: number;
   height: number;
   start: {
@@ -38,3 +46,45 @@ export type Level = {
     y: number;
   };
 };
+
+type StructureBaseLevel = BaseLevel & {
+  initialItems: string[];
+  goalItems: string[];
+  goalProcessed: string[];
+};
+
+export type StackLevel = StructureBaseLevel & {
+  kind: "stack";
+};
+
+export type QueueLevel = StructureBaseLevel & {
+  kind: "queue";
+};
+
+export type StructureLevel = StackLevel | QueueLevel;
+
+type TraversalBaseLevel = BaseLevel & {
+  expectedVisited: string[];
+};
+
+export type MatrixLevel = TraversalBaseLevel & {
+  kind: "matrix";
+  matrix: string[][];
+};
+
+export type TreeNodeData = {
+  id: string;
+  value: string;
+  children?: TreeNodeData[];
+};
+
+export type TreeLevel = TraversalBaseLevel & {
+  kind: "tree";
+  tree: TreeNodeData;
+};
+
+export type TraversalLevel = MatrixLevel | TreeLevel;
+
+export type Level = GridLevel | StackLevel | QueueLevel | MatrixLevel | TreeLevel;
+
+export type Locale = "en" | "es";

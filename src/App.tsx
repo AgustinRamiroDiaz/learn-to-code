@@ -1,8 +1,9 @@
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import type { ReactNode } from "react";
-import { type MutableRefObject, useRef, useState } from "react";
+import { type MutableRefObject, useEffect, useRef, useState } from "react";
 import {
   Button,
+  I18nProvider,
   ListBox,
   ListBoxItem,
   OverlayArrow,
@@ -10,21 +11,26 @@ import {
   TooltipTrigger,
 } from "react-aria-components";
 import type { editor, Uri } from "monaco-editor";
-import { gameApiTypes, levels } from "./level";
-import type { Diagnostic, Level, RunResult } from "./types";
+import { gameApiTypes, getLevels } from "./level";
+import { copy, locales, localeTags } from "./i18n";
+import type { Diagnostic, Level, Locale, RunResult } from "./types";
 import WorldView from "./WorldView";
 
 const modelPath = "file:///solution.ts";
 const runTimeoutMs = 1000;
 
-const idleResult: RunResult = {
-  status: "idle",
-  message: "Run your solution to see feedback.",
-  trace: [],
-};
-
 export default function App() {
-  const [activeLevel, setActiveLevel] = useState(levels[0]);
+  const [locale, setLocale] = useState<Locale>("en");
+  const t = copy[locale];
+  const levels = getLevels(locale);
+  const [activeLevelId, setActiveLevelId] = useState(levels[0].id);
+  const activeLevel =
+    levels.find((level) => level.id === activeLevelId) ?? levels[0];
+  const idleResult: RunResult = {
+    status: "idle",
+    message: t.messages.idle,
+    trace: [],
+  };
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -32,6 +38,10 @@ export default function App() {
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [runResult, setRunResult] = useState<RunResult>(idleResult);
   const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.lang = localeTags[locale];
+  }, [locale]);
 
   const handleEditorMount: OnMount = (editorInstance, monacoInstance) => {
     editorRef.current = editorInstance;
@@ -67,11 +77,21 @@ export default function App() {
   };
 
   const selectLevel = (level: Level) => {
-    setActiveLevel(level);
+    setActiveLevelId(level.id);
     setCode(level.starterCode);
     setDiagnostics([]);
     setRunResult(idleResult);
     editorRef.current?.setValue(level.starterCode);
+  };
+
+  const selectLocale = (nextLocale: Locale) => {
+    setLocale(nextLocale);
+    setDiagnostics([]);
+    setRunResult({
+      status: "idle",
+      message: copy[nextLocale].messages.idle,
+      trace: [],
+    });
   };
 
   const run = async () => {
@@ -85,7 +105,7 @@ export default function App() {
     setIsRunning(true);
     setRunResult({
       status: "running",
-      message: "Checking and running...",
+      message: t.messages.checking,
       trace: [],
     });
 
@@ -99,14 +119,20 @@ export default function App() {
       if (hasErrors) {
         setRunResult({
           status: "failed",
-          message: "Fix the TypeScript errors before running the level.",
+          message: t.messages.fixTypes,
           trace: [],
         });
         return;
       }
 
       const js = await emitJavaScript(monaco, model.uri);
-      const result = await runInWorker(js, activeLevel, workerRef);
+      const result = await runInWorker(
+        js,
+        activeLevel,
+        locale,
+        workerRef,
+        t.messages.timeout,
+      );
       setRunResult(result);
     } catch (error) {
       setRunResult({
@@ -114,7 +140,7 @@ export default function App() {
         message:
           error instanceof Error
             ? error.message
-            : "Could not run the solution.",
+            : t.messages.cannotRun,
         trace: [],
       });
     } finally {
@@ -123,47 +149,65 @@ export default function App() {
   };
 
   return (
-    <main className="appShell">
-      <section className="mainLayout">
-        <aside className="levelSidebar">
-          <ListBox
-            className="react-aria-ListBox levelList"
-            aria-label="Levels"
-            selectionMode="single"
-            disallowEmptySelection
-            selectedKeys={[activeLevel.id]}
-            onSelectionChange={(keys) => {
-              if (keys === "all") {
-                return;
-              }
+    <I18nProvider locale={localeTags[locale]}>
+      <main className="appShell">
+        <section className="mainLayout">
+          <aside className="levelSidebar">
+            <div className="localeSwitch" aria-label={t.language}>
+              {locales.map((item) => (
+                <Button
+                  key={item.id}
+                  className={
+                    item.id === locale
+                      ? "react-aria-Button localeButton active"
+                      : "react-aria-Button localeButton"
+                  }
+                  aria-pressed={item.id === locale}
+                  onPress={() => selectLocale(item.id)}
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </div>
 
-              const nextId = String([...keys][0]);
-              const nextLevel = levels.find((level) => level.id === nextId);
+            <ListBox
+              className="react-aria-ListBox levelList"
+              aria-label={t.levels}
+              selectionMode="single"
+              disallowEmptySelection
+              selectedKeys={[activeLevel.id]}
+              onSelectionChange={(keys) => {
+                if (keys === "all") {
+                  return;
+                }
 
-              if (nextLevel) {
-                selectLevel(nextLevel);
-              }
-            }}
-          >
-            {levels.map((level, index) => (
-              <ListBoxItem
-                key={level.id}
-                id={level.id}
-                textValue={level.name}
-                aria-label={`${level.name}: ${level.objective}`}
-                className="react-aria-ListBoxItem levelItem"
-              >
-                <span className="levelNumber">{index + 1}</span>
-                <span>
-                  <strong>{level.name.replace(/^Level \d+: /, "")}</strong>
-                </span>
-              </ListBoxItem>
-            ))}
-          </ListBox>
-        </aside>
+                const nextId = String([...keys][0]);
+                const nextLevel = levels.find((level) => level.id === nextId);
+
+                if (nextLevel) {
+                  selectLevel(nextLevel);
+                }
+              }}
+            >
+              {levels.map((level, index) => (
+                <ListBoxItem
+                  key={level.id}
+                  id={level.id}
+                  textValue={level.name}
+                  aria-label={`${level.name}: ${level.objective}`}
+                  className="react-aria-ListBoxItem levelItem"
+                >
+                  <span className="levelNumber">{index + 1}</span>
+                  <span>
+                    <strong>{levelTitle(level.name)}</strong>
+                  </span>
+                </ListBoxItem>
+              ))}
+            </ListBox>
+          </aside>
 
         <div className="workspace">
-          <div className="editorPane" aria-label="TypeScript editor">
+          <div className="editorPane" aria-label={t.typeScriptEditor}>
             <Editor
               height="100%"
               defaultLanguage="typescript"
@@ -188,41 +232,42 @@ export default function App() {
           <section className={`worldPanel ${runResult.status}`}>
             <div className="runPanelHeader">
               <div className="runPanelTools">
-                <InfoTip label="Level objective">{activeLevel.objective}</InfoTip>
-                <InfoTip label="World goal">
-                  Goal tile: x={activeLevel.goal.x}, y={activeLevel.goal.y}
+                <InfoTip label={t.levelObjective}>{activeLevel.objective}</InfoTip>
+                <InfoTip label={t.worldGoal}>
+                  {goalSummary(activeLevel, t)}
                 </InfoTip>
               </div>
               <div className="runPanelActions">
                 <Button className="react-aria-Button appButton" onPress={run} isDisabled={isRunning}>
-                  {isRunning ? "Running..." : "Run"}
+                  {isRunning ? t.running : t.run}
                 </Button>
                 <Button className="react-aria-Button appButton secondary" onPress={reset}>
-                  Reset
+                  {t.reset}
                 </Button>
               </div>
             </div>
             <WorldView level={activeLevel} runResult={runResult} />
             <div className="runStatus">
-              <h2>{statusTitle(runResult.status)}</h2>
+              <h2>{t.status[runResult.status]}</h2>
               <p>{runResult.message}</p>
             </div>
           </section>
 
           <section className="panel">
             <div className="panelHeader">
-              <h3>Diagnostics</h3>
+              <h3>{t.diagnostics}</h3>
               <span>{diagnostics.length}</span>
             </div>
             {diagnostics.length === 0 ? (
-              <p className="muted">Clean</p>
+              <p className="muted">{t.clean}</p>
             ) : (
               <ul className="diagnosticList">
                 {diagnostics.map((diagnostic, index) => (
                   <li key={`${diagnostic.line}-${diagnostic.column}-${index}`}>
-                    <strong>{diagnostic.severity}</strong>
+                    <strong>{t.severity[diagnostic.severity]}</strong>
                     <span>
-                      Line {diagnostic.line}, col {diagnostic.column}:{" "}
+                      {t.diagnosticsLine} {diagnostic.line}, {t.diagnosticsColumn}{" "}
+                      {diagnostic.column}:{" "}
                       {diagnostic.message}
                     </span>
                   </li>
@@ -233,23 +278,21 @@ export default function App() {
 
           <section className="panel">
             <div className="panelHeader">
-              <h3>Trace</h3>
+              <h3>{t.trace}</h3>
               <div className="panelTools">
-                <InfoTip label="Trace hint">{activeLevel.hint}</InfoTip>
+                <InfoTip label={t.traceHint}>{activeLevel.hint}</InfoTip>
                 <span>{runResult.trace.length}</span>
               </div>
             </div>
             {runResult.trace.length === 0 ? (
-              <p className="muted">No steps yet</p>
+              <p className="muted">{t.noSteps}</p>
             ) : (
               <ol className="traceList">
                 {runResult.trace.map((entry) => (
                   <li key={entry.step}>
                     <code>{entry.action}</code>
                     <span>{entry.note}</span>
-                    <small>
-                      x={entry.state.x}, y={entry.state.y}
-                    </small>
+                    <small>{traceState(entry.state, t)}</small>
                   </li>
                 ))}
               </ol>
@@ -259,6 +302,7 @@ export default function App() {
         </div>
       </section>
     </main>
+    </I18nProvider>
   );
 }
 
@@ -338,7 +382,9 @@ async function emitJavaScript(monaco: Monaco, uri: Uri): Promise<string> {
 function runInWorker(
   code: string,
   level: Level,
+  locale: Locale,
   workerRef: MutableRefObject<Worker | null>,
+  timeoutMessage: string,
 ): Promise<RunResult> {
   return new Promise((resolve) => {
     const worker = new Worker(new URL("./runner.worker.ts", import.meta.url), {
@@ -352,7 +398,7 @@ function runInWorker(
       workerRef.current = null;
       resolve({
         status: "error",
-        message: "Execution timed out. Check for an infinite loop.",
+        message: timeoutMessage,
         trace: [],
       });
     }, runTimeoutMs);
@@ -375,7 +421,7 @@ function runInWorker(
       });
     };
 
-    worker.postMessage({ code, level });
+    worker.postMessage({ code, level, locale });
   });
 }
 
@@ -393,17 +439,41 @@ function flattenDiagnosticMessage(message: unknown): string {
   return String(message);
 }
 
-function statusTitle(status: RunResult["status"]) {
-  switch (status) {
-    case "passed":
-      return "Passed";
-    case "failed":
-      return "Needs work";
-    case "error":
-      return "Runtime error";
-    case "running":
-      return "Running";
-    default:
-      return "Ready";
+function levelTitle(name: string) {
+  return name.replace(/^(Level|Nivel) \d+: /, "");
+}
+
+function goalSummary(level: Level, t: (typeof copy)[Locale]) {
+  if (level.kind === "grid") {
+    return `${t.goalTile}: x=${level.goal.x}, y=${level.goal.y}`;
   }
+
+  if (level.kind === "stack") {
+    return t.stackGoal;
+  }
+
+  if (level.kind === "queue") {
+    return t.queueGoal;
+  }
+
+  return level.kind === "matrix" ? t.matrixGoal : t.treeGoal;
+}
+
+function traceState(
+  state: RunResult["trace"][number]["state"],
+  t: (typeof copy)[Locale],
+) {
+  if (typeof state.x === "number" && typeof state.y === "number") {
+    return `x=${state.x}, y=${state.y}`;
+  }
+
+  if (state.visited) {
+    return `${t.current}: ${state.current ?? "[]"} | ${t.visited}: ${formatStateItems(state.visited)}`;
+  }
+
+  return `${t.remaining}: ${formatStateItems(state.items)} | ${t.processed}: ${formatStateItems(state.processed)}`;
+}
+
+function formatStateItems(items?: string[]) {
+  return items && items.length > 0 ? items.join(", ") : "[]";
 }
