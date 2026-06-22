@@ -87,21 +87,32 @@ export default function WorldView({ level, runResult }: WorldViewProps) {
     };
 
     let frame = 0;
-    let startTime = performance.now();
+    const startTime = performance.now();
 
     const animate = (time: number) => {
       resize();
       const elapsed = time - startTime;
+      const segmentCount = Math.max(path.length - 1, 0);
+      const totalDuration = segmentCount * stepDurationMs;
+      const playbackTime = Math.min(elapsed, totalDuration);
       const segment = Math.min(
-        Math.floor(elapsed / stepDurationMs),
-        Math.max(path.length - 2, 0),
+        Math.floor(playbackTime / stepDurationMs),
+        Math.max(segmentCount - 1, 0),
       );
-      const progress = Math.min((elapsed % stepDurationMs) / stepDurationMs, 1);
+      const segmentElapsed = Math.min(
+        playbackTime - segment * stepDurationMs,
+        stepDurationMs,
+      );
+      const progress = segmentCount === 0 ? 1 : segmentElapsed / stepDurationMs;
       const eased = easeInOut(progress);
       const from = path[segment] ?? path[0];
       const to = path[segment + 1] ?? from;
 
-      farmer.position.lerpVectors(from, to, eased);
+      if (elapsed >= totalDuration) {
+        farmer.position.copy(path[path.length - 1] ?? path[0]);
+      } else {
+        farmer.position.lerpVectors(from, to, eased);
+      }
       farmer.position.y = 0.46 + Math.sin(time / 140) * 0.03;
       farmer.rotation.y = Math.sin(time / 500) * 0.08;
       goal.rotation.y += 0.025;

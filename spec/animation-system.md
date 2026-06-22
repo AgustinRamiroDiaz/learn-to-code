@@ -104,8 +104,10 @@ The current system uses one animation segment per trace step.
 
 - `stepDurationMs = 420`
 - The active segment is computed from elapsed time.
+- Playback time is clamped to the total path duration so the final movement does not loop.
 - The segment progress is eased with `easeInOut()`.
 - `farmer.position.lerpVectors(from, to, eased)` interpolates between tiles.
+- Once playback has reached the end, the farmer is copied to the final path position.
 
 Additional ambient motion is layered on top:
 
@@ -160,4 +162,3 @@ For richer animation, prefer adding explicit trace metadata rather than making `
 - The scene is recreated on each level switch or run result update.
 - Trace entries currently store only position, action, and note.
 - There is no pause, scrubber, or per-step playback control yet.
-
