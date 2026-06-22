@@ -1,6 +1,14 @@
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
+import type { ReactNode } from "react";
 import { type MutableRefObject, useRef, useState } from "react";
-import { Button, ListBox, ListBoxItem } from "react-aria-components";
+import {
+  Button,
+  ListBox,
+  ListBoxItem,
+  OverlayArrow,
+  Tooltip,
+  TooltipTrigger,
+} from "react-aria-components";
 import type { editor, Uri } from "monaco-editor";
 import { gameApiTypes, levels } from "./level";
 import type { Diagnostic, Level, RunResult } from "./types";
@@ -116,26 +124,16 @@ export default function App() {
 
   return (
     <main className="appShell">
-      <header className="topBar">
-        <div>
-          <h1>TypeScript Minigame Lab</h1>
-          <p>{activeLevel.objective}</p>
-        </div>
-        <div className="actions">
-          <Button className="react-aria-Button appButton" onPress={run} isDisabled={isRunning}>
-            {isRunning ? "Running..." : "Run"}
-          </Button>
-          <Button className="react-aria-Button appButton secondary" onPress={reset}>
-            Reset
-          </Button>
-        </div>
-      </header>
-
       <section className="mainLayout">
         <aside className="levelSidebar">
-          <div className="sidebarHeader">
-            <span className="eyebrow">Levels</span>
-            <h2>Farm Tasks</h2>
+          <div className="levelActions">
+            <InfoTip label="Level objective">{activeLevel.objective}</InfoTip>
+            <Button className="react-aria-Button appButton" onPress={run} isDisabled={isRunning}>
+              {isRunning ? "Running..." : "Run"}
+            </Button>
+            <Button className="react-aria-Button appButton secondary" onPress={reset}>
+              Reset
+            </Button>
           </div>
 
           <ListBox
@@ -168,7 +166,6 @@ export default function App() {
                 <span className="levelNumber">{index + 1}</span>
                 <span>
                   <strong>{level.name.replace(/^Level \d+: /, "")}</strong>
-                  <small>{level.objective}</small>
                 </span>
               </ListBoxItem>
             ))}
@@ -199,23 +196,16 @@ export default function App() {
 
         <aside className="outputPane">
           <section className="worldPanel">
-            <div className="panelHeader">
-              <div>
-                <span className="eyebrow">Tiny world</span>
-                <h3>{activeLevel.name}</h3>
-              </div>
-              <span>
-                {activeLevel.goal.x},{activeLevel.goal.y}
-              </span>
+            <div className="panelHeader compact">
+              <InfoTip label="World goal">
+                Goal tile: x={activeLevel.goal.x}, y={activeLevel.goal.y}
+              </InfoTip>
             </div>
             <WorldView level={activeLevel} runResult={runResult} />
           </section>
 
           <section className={`status ${runResult.status}`}>
-            <div>
-              <span className="eyebrow">Level feedback</span>
-              <h2>{statusTitle(runResult.status)}</h2>
-            </div>
+            <h2>{statusTitle(runResult.status)}</h2>
             <p>{runResult.message}</p>
           </section>
 
@@ -225,7 +215,7 @@ export default function App() {
               <span>{diagnostics.length}</span>
             </div>
             {diagnostics.length === 0 ? (
-              <p className="muted">No TypeScript errors yet.</p>
+              <p className="muted">Clean</p>
             ) : (
               <ul className="diagnosticList">
                 {diagnostics.map((diagnostic, index) => (
@@ -243,11 +233,14 @@ export default function App() {
 
           <section className="panel">
             <div className="panelHeader">
-              <h3>Execution Trace</h3>
-              <span>{runResult.trace.length}</span>
+              <h3>Trace</h3>
+              <div className="panelTools">
+                <InfoTip label="Trace hint">{activeLevel.hint}</InfoTip>
+                <span>{runResult.trace.length}</span>
+              </div>
             </div>
             {runResult.trace.length === 0 ? (
-              <p className="muted">{activeLevel.hint}</p>
+              <p className="muted">No steps yet</p>
             ) : (
               <ol className="traceList">
                 {runResult.trace.map((entry) => (
@@ -266,6 +259,33 @@ export default function App() {
         </div>
       </section>
     </main>
+  );
+}
+
+function InfoTip({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <TooltipTrigger delay={250} closeDelay={100}>
+      <Button
+        className="react-aria-Button iconButton"
+        aria-label={label}
+      >
+        ?
+      </Button>
+      <Tooltip className="react-aria-Tooltip appTooltip">
+        <OverlayArrow>
+          <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true">
+            <path d="M0 0 L4 4 L8 0" />
+          </svg>
+        </OverlayArrow>
+        {children}
+      </Tooltip>
+    </TooltipTrigger>
   );
 }
 

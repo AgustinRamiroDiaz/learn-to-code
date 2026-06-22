@@ -50,7 +50,31 @@ body {
   color: var(--text-color);
 }
 
+.iconButton {
+  align-items: center;
+  background: var(--field-background);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-color-muted);
+  cursor: help;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 850;
+  height: 1.45rem;
+  justify-content: center;
+  padding: 0;
+  width: 1.45rem;
+}
+
+.iconButton[data-hovered],
+.iconButton[data-pressed] {
+  background: var(--highlight-overlay);
+  color: var(--text-color);
+}
+
 .appButton[data-focus-visible],
+.iconButton[data-focus-visible],
 .levelList[data-focus-visible],
 .levelItem[data-focus-visible] {
   outline: 2px solid var(--focus-ring-color);
@@ -59,36 +83,9 @@ body {
 
 .appShell {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: 1fr;
   min-height: 100vh;
   padding: 1.25rem;
-  gap: 1rem;
-}
-
-.topBar {
-  align-items: center;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 1rem;
-}
-
-.topBar h1 {
-  font-size: clamp(1.65rem, 3vw, 2.65rem);
-  letter-spacing: 0;
-  line-height: 1;
-  margin: 0;
-}
-
-.topBar p {
-  color: var(--text-color-muted);
-  margin: 0.45rem 0 0;
-}
-
-.actions {
-  display: flex;
-  gap: 0.65rem;
 }
 
 .mainLayout {
@@ -117,18 +114,15 @@ body {
   border-radius: var(--radius);
   display: grid;
   grid-template-rows: auto 1fr;
+  gap: 0.75rem;
   overflow: hidden;
   padding: 1rem;
 }
 
-.sidebarHeader {
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.85rem;
-}
-
-.sidebarHeader h2 {
-  font-size: 1rem;
-  margin: 0.18rem 0 0;
+.levelActions {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: auto 1fr 1fr;
 }
 
 .levelList {
@@ -137,7 +131,6 @@ body {
   gap: 0.55rem;
   outline: none;
   overflow: auto;
-  padding-top: 0.85rem;
 }
 
 .levelItem {
@@ -151,7 +144,7 @@ body {
   gap: 0.65rem;
   grid-template-columns: auto 1fr;
   outline: none;
-  padding: 0.72rem;
+  padding: 0.62rem;
   text-align: left;
   transition:
     background 150ms ease,
@@ -298,13 +291,88 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.panelHeader span {
+.panelHeader.compact {
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.panelHeader h3 {
+  margin: 0;
+}
+
+.panelHeader > span,
+.panelTools > span {
   background: var(--panel-background-strong);
   border-radius: 999px;
   color: var(--text-color-muted);
   min-width: 2rem;
   padding: 0.2rem 0.55rem;
   text-align: center;
+}
+
+.panelTools {
+  align-items: center;
+  display: flex;
+  gap: 0.45rem;
+}
+
+.appTooltip {
+  background: var(--highlight-background);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.24);
+  color: var(--highlight-foreground);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  max-width: 220px;
+  outline: none;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.appTooltip[data-entering],
+.appTooltip[data-exiting] {
+  opacity: 0;
+  transform: var(--origin);
+}
+
+.appTooltip[data-placement="top"] {
+  margin-bottom: 10px;
+  --origin: translateY(4px);
+}
+
+.appTooltip[data-placement="bottom"] {
+  margin-top: 10px;
+  --origin: translateY(-4px);
+}
+
+.appTooltip[data-placement="bottom"] .react-aria-OverlayArrow svg {
+  transform: rotate(180deg);
+}
+
+.appTooltip[data-placement="right"] {
+  margin-left: 10px;
+  --origin: translateX(-4px);
+}
+
+.appTooltip[data-placement="right"] .react-aria-OverlayArrow svg {
+  transform: rotate(90deg);
+}
+
+.appTooltip[data-placement="left"] {
+  margin-right: 10px;
+  --origin: translateX(4px);
+}
+
+.appTooltip[data-placement="left"] .react-aria-OverlayArrow svg {
+  transform: rotate(-90deg);
+}
+
+.appTooltip .react-aria-OverlayArrow svg {
+  display: block;
+  fill: var(--highlight-background);
 }
 
 .diagnosticList,
@@ -344,28 +412,17 @@ body {
     padding: 0.85rem;
   }
 
-  .topBar,
   .mainLayout,
   .workspace {
     grid-template-columns: 1fr;
-  }
-
-  .topBar {
-    align-items: stretch;
-    display: grid;
-  }
-
-  .actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
   }
 
   .levelSidebar {
     padding: 0.75rem;
   }
 
-  .sidebarHeader {
-    display: none;
+  .levelActions {
+    grid-template-columns: auto 1fr 1fr;
   }
 
   .levelList {
