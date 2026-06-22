@@ -122,10 +122,10 @@ export default function App() {
           <p>{activeLevel.objective}</p>
         </div>
         <div className="actions">
-          <Button className="appButton" onPress={run} isDisabled={isRunning}>
+          <Button className="react-aria-Button appButton" onPress={run} isDisabled={isRunning}>
             {isRunning ? "Running..." : "Run"}
           </Button>
-          <Button className="appButton secondary" onPress={reset}>
+          <Button className="react-aria-Button appButton secondary" onPress={reset}>
             Reset
           </Button>
         </div>
@@ -139,7 +139,7 @@ export default function App() {
           </div>
 
           <ListBox
-            className="levelList"
+            className="react-aria-ListBox levelList"
             aria-label="Levels"
             selectionMode="single"
             disallowEmptySelection
@@ -163,7 +163,7 @@ export default function App() {
                 id={level.id}
                 textValue={level.name}
                 aria-label={`${level.name}: ${level.objective}`}
-                className="levelItem"
+                className="react-aria-ListBoxItem levelItem"
               >
                 <span className="levelNumber">{index + 1}</span>
                 <span>
