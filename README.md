@@ -26,6 +26,14 @@ The main objective is to make programming feel tangible and fun without hiding t
 - Three.js
 - Web Workers
 
+## Development Standards
+
+Project decisions are governed by the Spec Kit constitution at
+`.specify/memory/constitution.md`. Before implementing a feature, verify that
+the plan preserves the browser-only runtime, typed deterministic simulation,
+test-driven workflow, consistent learner experience, and performance/resource
+requirements documented there.
+
 ## Getting Started
 
 Install dependencies:
