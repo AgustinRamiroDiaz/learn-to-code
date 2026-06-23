@@ -381,7 +381,7 @@ function renderTreeSnapshot(
   const positions = layoutTree(root);
   const visited = new Set(snapshot.visited);
 
-  positions.forEach((position, id) => {
+  positions.forEach((position) => {
     const node = position.node;
     node.children?.forEach((child) => {
       const childPosition = positions.get(child.id);

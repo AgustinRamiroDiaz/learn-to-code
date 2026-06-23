@@ -50,6 +50,17 @@ export default function App() {
     editorRef.current = editorInstance;
     monacoRef.current = monacoInstance;
 
+    const testWindow = window as Window & {
+      Cypress?: unknown;
+      __setMinigameCode?: (code: string) => void;
+    };
+
+    if (testWindow.Cypress) {
+      testWindow.__setMinigameCode = (nextCode: string) => {
+        editorInstance.setValue(nextCode);
+      };
+    }
+
     monacoInstance.languages.typescript.typescriptDefaults.setCompilerOptions({
       target: monacoInstance.languages.typescript.ScriptTarget.ES2020,
       module: monacoInstance.languages.typescript.ModuleKind.None,
@@ -107,6 +118,22 @@ export default function App() {
   };
 
   const selectLocale = (nextLocale: Locale) => {
+    const currentCode = editorRef.current?.getValue() ?? code;
+    const nextActiveLevel =
+      getLevels(nextLocale).find((level) => level.id === activeLevel.id) ??
+      activeLevel;
+    const isCurrentStarter = currentCode === activeLevel.starterCode;
+
+    if (isCurrentStarter) {
+      const nextSavedCode = { ...savedCodeByLevel };
+      delete nextSavedCode[activeLevel.id];
+
+      setSavedCodeByLevel(nextSavedCode);
+      writeSavedCode(nextSavedCode);
+      setCode(nextActiveLevel.starterCode);
+      editorRef.current?.setValue(nextActiveLevel.starterCode);
+    }
+
     setLocale(nextLocale);
     setDiagnostics([]);
     setRunResult({

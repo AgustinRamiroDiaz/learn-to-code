@@ -53,7 +53,7 @@ type LocalizedLevelCopy = {
   concept: string[];
 };
 type WithoutLocalizedCopy<T> = T extends unknown
-  ? Omit<T, keyof LocalizedLevelCopy>
+  ? Omit<T, keyof LocalizedLevelCopy | "starterCode">
   : never;
 type LevelBlueprint = (
   | WithoutLocalizedCopy<GridLevel>
@@ -63,7 +63,10 @@ type LevelBlueprint = (
   copy: Record<Locale, LocalizedLevelCopy>;
 };
 
-const movementApiReference = `// Available movement API:
+const apiReference = {
+  en: {
+    placeholder: "Your code here.",
+    movement: `// Available movement API:
 // Moves the character one tile to the right.
 declare function moveRight(): void;
 // Moves the character one tile to the left.
@@ -75,9 +78,8 @@ declare function moveDown(): void;
 // Adds a message to the execution trace.
 declare function log(message: string): void;
 
-`;
-
-const stackApiReference = `// Available stack API:
+`,
+    stack: `// Available stack API:
 // A stack removes the most recently added item first.
 interface GameStack<T = string> {
   // Adds an item to the top of the stack.
@@ -90,9 +92,8 @@ interface GameStack<T = string> {
   size(): number;
 }
 
-`;
-
-const queueApiReference = `// Available queue API:
+`,
+    queue: `// Available queue API:
 // A queue removes the oldest waiting item first.
 interface GameQueue<T = string> {
   // Adds an item to the back of the queue.
@@ -105,9 +106,8 @@ interface GameQueue<T = string> {
   size(): number;
 }
 
-`;
-
-const matrixApiReference = `// Available matrix API:
+`,
+    matrix: `// Available matrix API:
 // A matrix is a grid addressed by row, then column.
 interface GameMatrix<T = string> {
   // Number of rows in the matrix.
@@ -120,9 +120,8 @@ interface GameMatrix<T = string> {
   visit(row: number, col: number): void;
 }
 
-`;
-
-const treeApiReference = `// Available tree API:
+`,
+    tree: `// Available tree API:
 // A tree is made of nodes connected by parent/child links.
 interface GameTreeNode<T = string> {
   // Stable id for this node.
@@ -140,16 +139,91 @@ interface GameTree<T = string> {
   visit(node: GameTreeNode<T>): void;
 }
 
-`;
+`,
+  },
+  es: {
+    placeholder: "Tu codigo aqui.",
+    movement: `// API de movimiento disponible:
+// Mueve el personaje una casilla a la derecha.
+declare function moveRight(): void;
+// Mueve el personaje una casilla a la izquierda.
+declare function moveLeft(): void;
+// Mueve el personaje una casilla hacia arriba.
+declare function moveUp(): void;
+// Mueve el personaje una casilla hacia abajo.
+declare function moveDown(): void;
+// Agrega un mensaje a la traza de ejecucion.
+declare function log(message: string): void;
+
+`,
+    stack: `// API de pila disponible:
+// Una pila quita primero el elemento agregado mas recientemente.
+interface GameStack<T = string> {
+  // Agrega un elemento arriba de la pila.
+  push(item: T): void;
+  // Quita y devuelve el elemento superior.
+  pop(): T | undefined;
+  // Devuelve el elemento superior sin quitarlo.
+  peek(): T | undefined;
+  // Devuelve cuantos elementos hay en la pila.
+  size(): number;
+}
+
+`,
+    queue: `// API de cola disponible:
+// Una cola quita primero el elemento que lleva mas tiempo esperando.
+interface GameQueue<T = string> {
+  // Agrega un elemento al final de la cola.
+  enqueue(item: T): void;
+  // Quita y devuelve el elemento del frente.
+  dequeue(): T | undefined;
+  // Devuelve el elemento del frente sin quitarlo.
+  peek(): T | undefined;
+  // Devuelve cuantos elementos hay en la cola.
+  size(): number;
+}
+
+`,
+    matrix: `// API de matriz disponible:
+// Una matriz es una grilla identificada por fila y luego columna.
+interface GameMatrix<T = string> {
+  // Cantidad de filas en la matriz.
+  rows: number;
+  // Cantidad de columnas en la matriz.
+  cols: number;
+  // Lee el valor en una fila y columna.
+  get(row: number, col: number): T;
+  // Marca una fila y columna como visitadas en el mundo.
+  visit(row: number, col: number): void;
+}
+
+`,
+    tree: `// API de arbol disponible:
+// Un arbol se compone de nodos conectados por relaciones padre/hijo.
+interface GameTreeNode<T = string> {
+  // Identificador estable de este nodo.
+  id: string;
+  // Valor mostrado por este nodo.
+  value: T;
+  // Nodos hijos debajo de este nodo.
+  children: GameTreeNode<T>[];
+}
+
+interface GameTree<T = string> {
+  // El primer nodo del arbol.
+  root: GameTreeNode<T>;
+  // Marca un nodo como visitado en el mundo.
+  visit(node: GameTreeNode<T>): void;
+}
+
+`,
+  },
+} satisfies Record<Locale, Record<"movement" | "stack" | "queue" | "matrix" | "tree" | "placeholder", string>>;
 
 const levelBlueprints: LevelBlueprint[] = [
   {
     id: "furrow-east",
     kind: "grid",
-    starterCode: `${movementApiReference}function solve() {
-  // Your code here.
-}
-`,
     width: 4,
     height: 3,
     start: { x: 0, y: 1 },
@@ -182,10 +256,6 @@ const levelBlueprints: LevelBlueprint[] = [
   {
     id: "north-plot",
     kind: "grid",
-    starterCode: `${movementApiReference}function solve() {
-  // Your code here.
-}
-`,
     width: 4,
     height: 4,
     start: { x: 1, y: 0 },
@@ -218,10 +288,6 @@ const levelBlueprints: LevelBlueprint[] = [
   {
     id: "supply-stack",
     kind: "stack",
-    starterCode: `${stackApiReference}function solve(stack: GameStack<string>) {
-  // Your code here.
-}
-`,
     initialItems: ["soil", "seed", "water"],
     goalItems: [],
     goalProcessed: ["water", "seed", "soil"],
@@ -253,10 +319,6 @@ const levelBlueprints: LevelBlueprint[] = [
   {
     id: "snack-queue",
     kind: "queue",
-    starterCode: `${queueApiReference}function solve(queue: GameQueue<string>) {
-  // Your code here.
-}
-`,
     initialItems: ["ada", "bea", "cosmo"],
     goalItems: [],
     goalProcessed: ["ada", "bea", "cosmo"],
@@ -288,10 +350,6 @@ const levelBlueprints: LevelBlueprint[] = [
   {
     id: "market-matrix-path",
     kind: "matrix",
-    starterCode: `${matrixApiReference}function solve(matrix: GameMatrix<string>) {
-  // Your code here.
-}
-`,
     matrix: [
       ["A", "B", "C"],
       ["D", "E", "F"],
@@ -326,10 +384,6 @@ const levelBlueprints: LevelBlueprint[] = [
   {
     id: "quest-tree-direct",
     kind: "tree",
-    starterCode: `${treeApiReference}function solve(tree: GameTree<string>) {
-  // Your code here.
-}
-`,
     tree: {
       id: "camp",
       value: "Camp",
@@ -367,10 +421,6 @@ const levelBlueprints: LevelBlueprint[] = [
   {
     id: "warehouse-matrix-scan",
     kind: "matrix",
-    starterCode: `${matrixApiReference}function solve(matrix: GameMatrix<string>) {
-  // Your code here.
-}
-`,
     matrix: [
       ["A1", "A2", "A3"],
       ["B1", "B2", "B3"],
@@ -415,10 +465,6 @@ const levelBlueprints: LevelBlueprint[] = [
   {
     id: "skill-tree-depth-first",
     kind: "tree",
-    starterCode: `${treeApiReference}function solve(tree: GameTree<string>) {
-  // Your code here.
-}
-`,
     tree: {
       id: "basics",
       value: "Basics",
@@ -476,6 +522,43 @@ const levelBlueprints: LevelBlueprint[] = [
 export function getLevels(locale: Locale): Level[] {
   return levelBlueprints.map(({ copy, ...level }) => ({
     ...level,
+    starterCode: starterCodeForLevel(level, locale),
     ...copy[locale],
   }));
+}
+
+function starterCodeForLevel(
+  level: Omit<LevelBlueprint, "copy">,
+  locale: Locale,
+) {
+  const reference = apiReference[locale];
+  const placeholder = `  // ${reference.placeholder}`;
+
+  switch (level.kind) {
+    case "grid":
+      return `${reference.movement}function solve() {
+${placeholder}
+}
+`;
+    case "stack":
+      return `${reference.stack}function solve(stack: GameStack<string>) {
+${placeholder}
+}
+`;
+    case "queue":
+      return `${reference.queue}function solve(queue: GameQueue<string>) {
+${placeholder}
+}
+`;
+    case "matrix":
+      return `${reference.matrix}function solve(matrix: GameMatrix<string>) {
+${placeholder}
+}
+`;
+    case "tree":
+      return `${reference.tree}function solve(tree: GameTree<string>) {
+${placeholder}
+}
+`;
+  }
 }

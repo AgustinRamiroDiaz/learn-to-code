@@ -6,8 +6,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:e2e": "vite --host 127.0.0.1 --port 5174 --strictPort",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && pnpm typecheck",
+    "test:unit": "vitest run",
+    "preview": "vite preview",
+    "test:e2e": "start-server-and-test dev:e2e http://127.0.0.1:5174 \"env -u ELECTRON_RUN_AS_NODE -u ELECTRON_NO_ATTACH_CONSOLE cypress run\"",
+    "test:e2e:open": "env -u ELECTRON_RUN_AS_NODE -u ELECTRON_NO_ATTACH_CONSOLE cypress open",
+    "prepare": "husky"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -18,12 +25,22 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^4.5.2",
+    "cypress": "^15.17.0",
+    "eslint": "^10.5.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.6.0",
+    "husky": "^9.1.7",
     "playwright": "^1.61.0",
+    "start-server-and-test": "^3.0.11",
     "typescript": "^5.8.3",
-    "vite": "^7.0.0"
+    "typescript-eslint": "^8.61.1",
+    "vite": "^7.0.0",
+    "vitest": "^4.1.9"
   }
 }
