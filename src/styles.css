@@ -57,6 +57,10 @@ body {
   color: var(--text-color);
 }
 
+.appButton.compact {
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+}
+
 .iconButton {
   align-items: center;
   background: var(--field-background);
@@ -112,9 +116,130 @@ body {
   grid-template-columns: 72px minmax(0, 1fr);
 }
 
+.levelSelectView,
+.labView {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.levelSelectView {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.levelSelectHeader,
+.labHeader {
+  align-items: center;
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.levelSelectHeader h1 {
+  font-size: 1.35rem;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.levelSelectHeader p {
+  color: var(--text-color-muted);
+  margin: 0.25rem 0 0;
+}
+
+.levelCardGrid {
+  align-content: start;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  min-height: 0;
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.levelCard {
+  align-items: start;
+  background: var(--panel-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-color);
+  cursor: pointer;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: auto 1fr;
+  min-height: 138px;
+  padding: 1rem;
+  text-align: left;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.levelCard[data-hovered] {
+  background: var(--highlight-hover);
+  border-color: var(--tint-500);
+  transform: translateY(-1px);
+}
+
+.levelCard[data-pressed] {
+  transform: translateY(1px);
+}
+
+.levelCard strong,
+.levelCard small {
+  display: block;
+}
+
+.levelCard small {
+  color: var(--text-color-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  margin-top: 0.35rem;
+}
+
+.levelCardAction {
+  align-self: end;
+  color: var(--highlight-background);
+  font-size: 0.78rem;
+  font-weight: 850;
+  grid-column: 2;
+}
+
+.labView {
+  display: grid;
+  gap: 1rem;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.labHeaderTitle {
+  align-items: center;
+  display: flex;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.labHeaderTitle span {
+  color: var(--text-color-muted);
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 760;
+}
+
+.labHeaderTitle strong {
+  display: block;
+}
+
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  grid-template-columns:
+    minmax(220px, 0.52fr)
+    minmax(0, 1.05fr)
+    minmax(320px, 0.85fr);
   gap: 1rem;
   height: 100%;
   min-height: 0;
@@ -122,6 +247,7 @@ body {
 }
 
 .levelSidebar,
+.tutorialPanel,
 .editorPane,
 .outputPane {
   min-height: 0;
@@ -149,6 +275,10 @@ body {
   display: grid;
   gap: 0.4rem;
   grid-template-columns: 1fr 1fr;
+}
+
+.localeSwitch.compact {
+  min-width: 104px;
 }
 
 .localeButton {
@@ -299,6 +429,51 @@ body {
   border-radius: var(--radius);
   min-height: 0;
   overflow: hidden;
+}
+
+.tutorialPanel {
+  background: var(--panel-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 1rem;
+  grid-template-rows: auto auto minmax(0, auto);
+  overflow: auto;
+  padding: 1rem;
+}
+
+.tutorialPanel h2 {
+  font-size: 1.05rem;
+  margin: 0.25rem 0 0;
+}
+
+.tutorialPanel p {
+  color: var(--text-color-muted);
+  line-height: 1.45;
+  margin: 0.5rem 0 0;
+}
+
+.conceptList {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.conceptList li {
+  color: var(--text-color);
+  line-height: 1.4;
+  padding-left: 0.2rem;
+}
+
+.hintBlock {
+  background: var(--panel-background-strong);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem;
+}
+
+.hintBlock strong {
+  color: var(--highlight-background);
 }
 
 .outputPane {
@@ -577,8 +752,18 @@ body {
     padding: 0.85rem;
   }
 
-  .mainLayout,
   .workspace {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .levelSelectHeader,
+  .labHeader {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .levelCardGrid {
     grid-template-columns: 1fr;
   }
 

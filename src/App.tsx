@@ -1,20 +1,12 @@
-import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
-import type { ReactNode } from "react";
+import { type Monaco, type OnMount } from "@monaco-editor/react";
 import { type MutableRefObject, useEffect, useRef, useState } from "react";
-import {
-  Button,
-  I18nProvider,
-  ListBox,
-  ListBoxItem,
-  OverlayArrow,
-  Tooltip,
-  TooltipTrigger,
-} from "react-aria-components";
+import { I18nProvider } from "react-aria-components";
 import type { editor, Uri } from "monaco-editor";
 import { gameApiTypes, getLevels } from "./level";
-import { copy, locales, localeTags } from "./i18n";
+import { copy, localeTags } from "./i18n";
+import LabView from "./LabView";
+import LevelSelectView from "./LevelSelectView";
 import type { Diagnostic, Level, Locale, RunResult } from "./types";
-import WorldView from "./WorldView";
 
 const modelPath = "file:///solution.ts";
 const runTimeoutMs = 1000;
@@ -38,7 +30,7 @@ export default function App() {
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [runResult, setRunResult] = useState<RunResult>(idleResult);
   const [isRunning, setIsRunning] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [view, setView] = useState<"levels" | "lab">("levels");
   const [collapsedPanels, setCollapsedPanels] = useState({
     world: false,
     diagnostics: false,
@@ -88,6 +80,7 @@ export default function App() {
     setDiagnostics([]);
     setRunResult(idleResult);
     editorRef.current?.setValue(level.starterCode);
+    setView("lab");
   };
 
   const selectLocale = (nextLocale: Locale) => {
@@ -164,250 +157,36 @@ export default function App() {
   return (
     <I18nProvider locale={localeTags[locale]}>
       <main className="appShell">
-        <section
-          className={
-            isSidebarCollapsed
-              ? "mainLayout sidebarCollapsed"
-              : "mainLayout"
-          }
-        >
-          <aside
-            className={
-              isSidebarCollapsed
-                ? "levelSidebar collapsed"
-                : "levelSidebar"
-            }
-          >
-            <Button
-              className="react-aria-Button collapseButton sidebarToggle"
-              aria-label={`${isSidebarCollapsed ? t.expand : t.collapse} ${t.sidebar}`}
-              aria-expanded={!isSidebarCollapsed}
-              onPress={() => setIsSidebarCollapsed((value) => !value)}
-            >
-              {isSidebarCollapsed ? ">" : "<"}
-            </Button>
-
-            <div className="localeSwitch" aria-label={t.language}>
-              {locales.map((item) => (
-                <Button
-                  key={item.id}
-                  className={
-                    item.id === locale
-                      ? "react-aria-Button localeButton active"
-                      : "react-aria-Button localeButton"
-                  }
-                  aria-pressed={item.id === locale}
-                  onPress={() => selectLocale(item.id)}
-                >
-                  {item.label}
-                </Button>
-              ))}
-            </div>
-
-            <ListBox
-              className="react-aria-ListBox levelList"
-              aria-label={t.levels}
-              selectionMode="single"
-              disallowEmptySelection
-              selectedKeys={[activeLevel.id]}
-              onSelectionChange={(keys) => {
-                if (keys === "all") {
-                  return;
-                }
-
-                const nextId = String([...keys][0]);
-                const nextLevel = levels.find((level) => level.id === nextId);
-
-                if (nextLevel) {
-                  selectLevel(nextLevel);
-                }
-              }}
-            >
-              {levels.map((level, index) => (
-                <ListBoxItem
-                  key={level.id}
-                  id={level.id}
-                  textValue={level.name}
-                  aria-label={`${level.name}: ${level.objective}`}
-                  className="react-aria-ListBoxItem levelItem"
-                >
-                  <span className="levelNumber">{index + 1}</span>
-                  <span className="levelName">
-                    <strong>{levelTitle(level.name)}</strong>
-                  </span>
-                </ListBoxItem>
-              ))}
-            </ListBox>
-          </aside>
-
-        <div className="workspace">
-          <div className="editorPane" aria-label={t.typeScriptEditor}>
-            <Editor
-              height="100%"
-              defaultLanguage="typescript"
-              path={modelPath}
-              theme="vs-dark"
-              value={code}
-              onChange={(value) => setCode(value ?? "")}
-              onMount={handleEditorMount}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 15,
-                fontLigatures: true,
-                scrollBeyondLastLine: false,
-                tabSize: 2,
-                wordWrap: "on",
-                padding: { top: 16, bottom: 16 },
-              }}
-            />
-        </div>
-
-        <aside className="outputPane">
-          <section
-            className={
-              collapsedPanels.world
-                ? `worldPanel ${runResult.status} collapsed`
-                : `worldPanel ${runResult.status}`
-            }
-          >
-            <div className="runPanelHeader">
-              <div className="runPanelTools">
-                <Button
-                  className="react-aria-Button collapseButton"
-                  aria-label={`${collapsedPanels.world ? t.expand : t.collapse} ${t.worldGoal}`}
-                  aria-expanded={!collapsedPanels.world}
-                  onPress={() => togglePanel("world")}
-                >
-                  {collapsedPanels.world ? "+" : "-"}
-                </Button>
-                <InfoTip label={t.levelObjective}>{activeLevel.objective}</InfoTip>
-                <InfoTip label={t.worldGoal}>
-                  {goalSummary(activeLevel, t)}
-                </InfoTip>
-              </div>
-              <div className="runPanelActions">
-                <Button className="react-aria-Button appButton" onPress={run} isDisabled={isRunning}>
-                  {isRunning ? t.running : t.run}
-                </Button>
-                <Button className="react-aria-Button appButton secondary" onPress={reset}>
-                  {t.reset}
-                </Button>
-              </div>
-            </div>
-            <div className="worldPanelBody">
-              <WorldView level={activeLevel} runResult={runResult} />
-              <div className="runStatus">
-                <h2>{t.status[runResult.status]}</h2>
-                <p>{runResult.message}</p>
-              </div>
-            </div>
-          </section>
-
-          <section
-            className={
-              collapsedPanels.diagnostics ? "panel collapsed" : "panel"
-            }
-          >
-            <div className="panelHeader">
-              <div className="panelTitleRow">
-                <Button
-                  className="react-aria-Button collapseButton"
-                  aria-label={`${collapsedPanels.diagnostics ? t.expand : t.collapse} ${t.diagnostics}`}
-                  aria-expanded={!collapsedPanels.diagnostics}
-                  onPress={() => togglePanel("diagnostics")}
-                >
-                  {collapsedPanels.diagnostics ? "+" : "-"}
-                </Button>
-                <h3>{t.diagnostics}</h3>
-              </div>
-              <span>{diagnostics.length}</span>
-            </div>
-            <div className="panelBody">
-              {diagnostics.length === 0 ? (
-                <p className="muted">{t.clean}</p>
-              ) : (
-                <ul className="diagnosticList">
-                  {diagnostics.map((diagnostic, index) => (
-                    <li key={`${diagnostic.line}-${diagnostic.column}-${index}`}>
-                      <strong>{t.severity[diagnostic.severity]}</strong>
-                      <span>
-                        {t.diagnosticsLine} {diagnostic.line}, {t.diagnosticsColumn}{" "}
-                        {diagnostic.column}:{" "}
-                        {diagnostic.message}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
-
-          <section className={collapsedPanels.trace ? "panel collapsed" : "panel"}>
-            <div className="panelHeader">
-              <div className="panelTitleRow">
-                <Button
-                  className="react-aria-Button collapseButton"
-                  aria-label={`${collapsedPanels.trace ? t.expand : t.collapse} ${t.trace}`}
-                  aria-expanded={!collapsedPanels.trace}
-                  onPress={() => togglePanel("trace")}
-                >
-                  {collapsedPanels.trace ? "+" : "-"}
-                </Button>
-                <h3>{t.trace}</h3>
-              </div>
-              <div className="panelTools">
-                <InfoTip label={t.traceHint}>{activeLevel.hint}</InfoTip>
-                <span>{runResult.trace.length}</span>
-              </div>
-            </div>
-            <div className="panelBody">
-              {runResult.trace.length === 0 ? (
-                <p className="muted">{t.noSteps}</p>
-              ) : (
-                <ol className="traceList">
-                  {runResult.trace.map((entry) => (
-                    <li key={entry.step}>
-                      <code>{entry.action}</code>
-                      <span>{entry.note}</span>
-                      <small>{traceState(entry.state, t)}</small>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </div>
-          </section>
-        </aside>
-        </div>
-      </section>
-    </main>
+        {view === "levels" ? (
+          <LevelSelectView
+            levels={levels}
+            locale={locale}
+            t={t}
+            onSelectLevel={selectLevel}
+            onSelectLocale={selectLocale}
+          />
+        ) : (
+          <LabView
+            code={code}
+            collapsedPanels={collapsedPanels}
+            diagnostics={diagnostics}
+            isRunning={isRunning}
+            level={activeLevel}
+            locale={locale}
+            modelPath={modelPath}
+            runResult={runResult}
+            t={t}
+            onBackToLevels={() => setView("levels")}
+            onChangeCode={setCode}
+            onEditorMount={handleEditorMount}
+            onReset={reset}
+            onRun={run}
+            onSelectLocale={selectLocale}
+            onTogglePanel={togglePanel}
+          />
+        )}
+      </main>
     </I18nProvider>
-  );
-}
-
-function InfoTip({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <TooltipTrigger delay={250} closeDelay={100}>
-      <Button
-        className="react-aria-Button iconButton"
-        aria-label={label}
-      >
-        ?
-      </Button>
-      <Tooltip className="react-aria-Tooltip appTooltip">
-        <OverlayArrow>
-          <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true">
-            <path d="M0 0 L4 4 L8 0" />
-          </svg>
-        </OverlayArrow>
-        {children}
-      </Tooltip>
-    </TooltipTrigger>
   );
 }
 
@@ -515,43 +294,4 @@ function flattenDiagnosticMessage(message: unknown): string {
   }
 
   return String(message);
-}
-
-function levelTitle(name: string) {
-  return name.replace(/^(Level|Nivel) \d+: /, "");
-}
-
-function goalSummary(level: Level, t: (typeof copy)[Locale]) {
-  if (level.kind === "grid") {
-    return `${t.goalTile}: x=${level.goal.x}, y=${level.goal.y}`;
-  }
-
-  if (level.kind === "stack") {
-    return t.stackGoal;
-  }
-
-  if (level.kind === "queue") {
-    return t.queueGoal;
-  }
-
-  return level.kind === "matrix" ? t.matrixGoal : t.treeGoal;
-}
-
-function traceState(
-  state: RunResult["trace"][number]["state"],
-  t: (typeof copy)[Locale],
-) {
-  if (typeof state.x === "number" && typeof state.y === "number") {
-    return `x=${state.x}, y=${state.y}`;
-  }
-
-  if (state.visited) {
-    return `${t.current}: ${state.current ?? "[]"} | ${t.visited}: ${formatStateItems(state.visited)}`;
-  }
-
-  return `${t.remaining}: ${formatStateItems(state.items)} | ${t.processed}: ${formatStateItems(state.processed)}`;
-}
-
-function formatStateItems(items?: string[]) {
-  return items && items.length > 0 ? items.join(", ") : "[]";
 }

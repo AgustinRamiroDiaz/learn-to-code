@@ -30,6 +30,8 @@ type BaseLevel = {
   name: string;
   objective: string;
   hint: string;
+  conceptTitle: string;
+  concept: string[];
   starterCode: string;
 };
 

@@ -14,6 +14,11 @@ export const copy = {
   en: {
     language: "Language",
     levels: "Levels",
+    appTitle: "TypeScript Minigame Lab",
+    chooseLevel: "Choose a level",
+    startLevel: "Start",
+    backToLevels: "Levels",
+    currentLevel: "Current level",
     run: "Run",
     running: "Running...",
     reset: "Reset",
@@ -62,6 +67,11 @@ export const copy = {
   es: {
     language: "Idioma",
     levels: "Niveles",
+    appTitle: "TypeScript Minigame Lab",
+    chooseLevel: "Elige un nivel",
+    startLevel: "Empezar",
+    backToLevels: "Niveles",
+    currentLevel: "Nivel actual",
     run: "Ejecutar",
     running: "Ejecutando...",
     reset: "Reiniciar",
