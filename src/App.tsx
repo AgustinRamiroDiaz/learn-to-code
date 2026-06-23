@@ -10,11 +10,14 @@ import type { Diagnostic, Level, Locale, RunResult } from "./types";
 
 const modelPath = "file:///solution.ts";
 const runTimeoutMs = 1000;
+const savedCodeStorageKey = "typescript-minigame-lab:level-code";
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("en");
   const t = copy[locale];
   const levels = getLevels(locale);
+  const [savedCodeByLevel, setSavedCodeByLevel] =
+    useState<Record<string, string>>(readSavedCode);
   const [activeLevelId, setActiveLevelId] = useState(levels[0].id);
   const activeLevel =
     levels.find((level) => level.id === activeLevelId) ?? levels[0];
@@ -26,7 +29,9 @@ export default function App() {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  const [code, setCode] = useState(activeLevel.starterCode);
+  const [code, setCode] = useState(
+    savedCodeByLevel[activeLevel.id] ?? activeLevel.starterCode,
+  );
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [runResult, setRunResult] = useState<RunResult>(idleResult);
   const [isRunning, setIsRunning] = useState(false);
@@ -68,6 +73,11 @@ export default function App() {
   };
 
   const reset = () => {
+    const nextSavedCode = { ...savedCodeByLevel };
+    delete nextSavedCode[activeLevel.id];
+
+    setSavedCodeByLevel(nextSavedCode);
+    writeSavedCode(nextSavedCode);
     setCode(activeLevel.starterCode);
     setDiagnostics([]);
     setRunResult(idleResult);
@@ -75,12 +85,25 @@ export default function App() {
   };
 
   const selectLevel = (level: Level) => {
+    const nextCode = savedCodeByLevel[level.id] ?? level.starterCode;
+
     setActiveLevelId(level.id);
-    setCode(level.starterCode);
+    setCode(nextCode);
     setDiagnostics([]);
     setRunResult(idleResult);
-    editorRef.current?.setValue(level.starterCode);
+    editorRef.current?.setValue(nextCode);
     setView("lab");
+  };
+
+  const updateCode = (nextCode: string) => {
+    const nextSavedCode = {
+      ...savedCodeByLevel,
+      [activeLevel.id]: nextCode,
+    };
+
+    setCode(nextCode);
+    setSavedCodeByLevel(nextSavedCode);
+    writeSavedCode(nextSavedCode);
   };
 
   const selectLocale = (nextLocale: Locale) => {
@@ -177,7 +200,7 @@ export default function App() {
             runResult={runResult}
             t={t}
             onBackToLevels={() => setView("levels")}
-            onChangeCode={setCode}
+            onChangeCode={updateCode}
             onEditorMount={handleEditorMount}
             onReset={reset}
             onRun={run}
@@ -294,4 +317,34 @@ function flattenDiagnosticMessage(message: unknown): string {
   }
 
   return String(message);
+}
+
+function readSavedCode(): Record<string, string> {
+  try {
+    const saved = window.localStorage.getItem(savedCodeStorageKey);
+    if (!saved) {
+      return {};
+    }
+
+    const parsed = JSON.parse(saved) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        (entry): entry is [string, string] => typeof entry[1] === "string",
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function writeSavedCode(savedCode: Record<string, string>) {
+  try {
+    window.localStorage.setItem(savedCodeStorageKey, JSON.stringify(savedCode));
+  } catch {
+    // Code drafts are a convenience. If storage is unavailable, the editor still works.
+  }
 }
