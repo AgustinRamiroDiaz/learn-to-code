@@ -68,8 +68,7 @@ const levelBlueprints: LevelBlueprint[] = [
     id: "furrow-east",
     kind: "grid",
     starterCode: `function solve() {
-  moveRight();
-  moveRight();
+  // Your code here.
 }
 `,
     width: 4,
@@ -105,9 +104,7 @@ const levelBlueprints: LevelBlueprint[] = [
     id: "north-plot",
     kind: "grid",
     starterCode: `function solve() {
-  moveUp();
-  moveUp();
-  moveRight();
+  // Your code here.
 }
 `,
     width: 4,
@@ -143,9 +140,7 @@ const levelBlueprints: LevelBlueprint[] = [
     id: "supply-stack",
     kind: "stack",
     starterCode: `function solve(stack: GameStack<string>) {
-  stack.pop();
-  stack.pop();
-  stack.pop();
+  // Your code here.
 }
 `,
     initialItems: ["soil", "seed", "water"],
@@ -180,9 +175,7 @@ const levelBlueprints: LevelBlueprint[] = [
     id: "snack-queue",
     kind: "queue",
     starterCode: `function solve(queue: GameQueue<string>) {
-  queue.dequeue();
-  queue.dequeue();
-  queue.dequeue();
+  // Your code here.
 }
 `,
     initialItems: ["ada", "bea", "cosmo"],
@@ -217,11 +210,7 @@ const levelBlueprints: LevelBlueprint[] = [
     id: "market-matrix-path",
     kind: "matrix",
     starterCode: `function solve(matrix: GameMatrix<string>) {
-  matrix.visit(0, 0);
-  matrix.visit(0, 1);
-  matrix.visit(0, 2);
-  matrix.visit(1, 2);
-  matrix.visit(2, 2);
+  // Your code here.
 }
 `,
     matrix: [
@@ -259,10 +248,7 @@ const levelBlueprints: LevelBlueprint[] = [
     id: "quest-tree-direct",
     kind: "tree",
     starterCode: `function solve(tree: GameTree<string>) {
-  const root = tree.root;
-  tree.visit(root);
-  tree.visit(root.children[0]);
-  tree.visit(root.children[1]);
+  // Your code here.
 }
 `,
     tree: {
@@ -303,11 +289,7 @@ const levelBlueprints: LevelBlueprint[] = [
     id: "warehouse-matrix-scan",
     kind: "matrix",
     starterCode: `function solve(matrix: GameMatrix<string>) {
-  for (let row = 0; row < matrix.rows; row += 1) {
-    for (let col = 0; col < matrix.cols; col += 1) {
-      matrix.visit(row, col);
-    }
-  }
+  // Your code here.
 }
 `,
     matrix: [
@@ -355,15 +337,7 @@ const levelBlueprints: LevelBlueprint[] = [
     id: "skill-tree-depth-first",
     kind: "tree",
     starterCode: `function solve(tree: GameTree<string>) {
-  function walk(node: GameTreeNode<string>) {
-    tree.visit(node);
-
-    for (const child of node.children) {
-      walk(child);
-    }
-  }
-
-  walk(tree.root);
+  // Your code here.
 }
 `,
     tree: {
